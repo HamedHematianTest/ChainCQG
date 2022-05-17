@@ -45,10 +45,10 @@ args.add_argument("--loss_discount",
 
 args = args.parse_args()
 
-set_seed(args.random_seed)
+set_seed(1111)
 
 # init all datasets
-[train_dataset_dir, val_dataset_dir, test_dataset_dir] = get_dataset_dir_by_name(args.dataset_name)
+[train_dataset_dir, val_dataset_dir, test_dataset_dir] = get_dataset_dir_by_name('coqa_two_gpt')
 train_dataset_dir = "../" + train_dataset_dir
 val_dataset_dir = "../" + val_dataset_dir
 test_dataset_dir = "../" + test_dataset_dir
@@ -102,24 +102,24 @@ test_dataset = TwoGPTDataset(test_data, tokenizer)
 
 train_dataloader = DataLoader(dataset=train_dataset, 
                               shuffle=True, 
-                              batch_size=args.batch_size, 
+                              batch_size=1, 
                               collate_fn=train_dataset.collate)
 
 val_dataloader = DataLoader(dataset=val_dataset, 
                             shuffle=False, 
-                            batch_size=args.batch_size, 
+                            batch_size=1, 
                             collate_fn=train_dataset.collate)
 
 test_dataloader = DataLoader(dataset=test_dataset, 
                             shuffle=False, 
-                            batch_size=args.batch_size, 
+                            batch_size=1, 
                             collate_fn=train_dataset.collate)
 
 
 # load the model
-if args.model_size == "small":
+if "medium" == "small":
     model_type = "gpt2" 
-elif args.model_size == "medium":
+elif "medium" == "medium":
     model_type = "gpt2-medium"
 else:
     raise NotImplementedError()
@@ -213,14 +213,14 @@ def train_one_iter(batch, update_count, fp16=False):
             # breakpoint()
             logits, past = model_A(dial_turn_inputs, past=past)
 
-            if args.use_all_loss:
+            if True:
                 all_logits.append(logits)
             elif turn_num == len(dial_inputs) - 1 or turn_num == len(dial_inputs) - 2:
                 all_logits.append(logits)
         else:
             # breakpoint()
             logits, past = model_B(dial_turn_inputs, past=past)
-            if args.use_all_loss:
+            if True:
                 all_logits.append(logits)
             elif turn_num == len(dial_inputs) - 1 or turn_num == len(dial_inputs) - 2:
                 all_logits.append(logits)
@@ -236,7 +236,7 @@ def train_one_iter(batch, update_count, fp16=False):
     # breakpoint()
     
     # only last two turn loss
-    if args.use_all_loss:
+    if True:
         loss = criterion(all_logits, target[:, :], target_mask[:, :],
                          label_smoothing=0.02, reduce="batch",
                          loss_discount=args.loss_discount, end_length=length)
@@ -245,11 +245,11 @@ def train_one_iter(batch, update_count, fp16=False):
         loss = criterion(all_logits, target[:, -length:], target_mask[:, -length:], 
                             label_smoothing=0.02, reduce="batch") 
 
-    loss /= args.gradient_accumulation_steps
+    loss /= 1
 
     loss.backward()
         
-    record_loss = loss.item() * args.gradient_accumulation_steps
+    record_loss = loss.item() * 1
     perplexity = np.exp(record_loss)
     
     return record_loss, perplexity
@@ -305,12 +305,12 @@ def validate(dataloader):
 criterion = SequenceCrossEntropyLoss()
 
 # make Checkpoint dir
-if args.model_size == "small":
-    _checkpoint_dir = args.dataset_name + "_small_Checkpoint"
-elif args.model_size == "medium":
-    _checkpoint_dir = args.dataset_name + "_medium_Checkpoint"
-elif args.model_size == "large":
-    _checkpoint_dir = args.dataset_name + "_large_Checkpoint"
+if "medium" == "small":
+    _checkpoint_dir = "coqa_two_gpt" + "_small_Checkpoint"
+elif "medium" == "medium":
+    _checkpoint_dir = "coqa_two_gpt" + "_medium_Checkpoint"
+elif "medium" == "large":
+    _checkpoint_dir = "coqa_two_gpt" + "_large_Checkpoint"
 
 
 for i in range(1, 10):
