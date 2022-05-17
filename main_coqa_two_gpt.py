@@ -239,7 +239,7 @@ def train_one_iter(batch, update_count, fp16=False):
     if True:
         loss = criterion(all_logits, target[:, :], target_mask[:, :],
                          label_smoothing=0.02, reduce="batch",
-                         loss_discount=args.loss_discount, end_length=length)
+                         loss_discount=1, end_length=length)
     else:
         # length = all_logits.shape[1]
         loss = criterion(all_logits, target[:, -length:], target_mask[:, -length:], 
