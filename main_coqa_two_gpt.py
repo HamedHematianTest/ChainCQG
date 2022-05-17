@@ -13,7 +13,6 @@ from torch.nn.utils.rnn import pad_sequence
 
 from transformers import GPT2LMHeadModel, GPT2Tokenizer, AdamW, get_linear_schedule_with_warmup, set_seed
 
-from torchfly.training.arguments import BaseArguments
 
 import os, sys
 sys.path.append(os.path.abspath('..'))
@@ -21,29 +20,6 @@ sys.path.append(os.path.abspath('../..'))
 
 from utils import *
 
-
-args = BaseArguments() 
-args.add_argument("--model_size",
-                  type=str,
-                  help="Model size")
-
-args.add_argument("--dataset_name",
-                  type=str,
-                  help="dataset to use")
-
-args.add_argument("--random_seed",
-                  type=int,
-                  help="random_seed")
-
-args.add_argument("--use_all_loss",
-                          action='store_true',
-                          help="Use base model or not")
-args.add_argument("--loss_discount",
-                  type=float,
-                  default=1.0,
-                  help="the loss discount for turn before the final two turn, work when use_all_loss=True")
-
-args = args.parse_args()
 
 set_seed(1111)
 
@@ -331,7 +307,7 @@ with open(config_loc, "w") as f:
     json.dump(config, f, indent=4)
 
 # define hyper-parameters
-num_train_optimization_steps = num_train_optimization_steps = len(train_dataset) * args.num_train_epochs // args.batch_size // args.gradient_accumulation_steps
+num_train_optimization_steps = num_train_optimization_steps = len(train_dataset) * 10 // 1 // 1
 
 param_optimizer = list(model_A.named_parameters()) + list(model_B.named_parameters())
 no_decay = ['bias', 'ln', 'LayerNorm.weight']
@@ -342,11 +318,11 @@ optimizer_grouped_parameters = [
 
 
 optimizer = AdamW(optimizer_grouped_parameters, 
-                  lr=args.learning_rate,
+                  lr=1e-5,
                   eps=1e-06)
 
 scheduler = get_linear_schedule_with_warmup(optimizer,
-                                            num_warmup_steps=args.warmup_steps,
+                                            num_warmup_steps=100,
                                             num_training_steps=num_train_optimization_steps)
 
 
@@ -358,7 +334,7 @@ progress_bar = tqdm.tqdm
 start = time.time()
 old_ppl = -float('Inf')
 
-for ep in range(args.num_train_epochs):
+for ep in range(10):
 
     "Training"
     pbar = progress_bar(train_dataloader)
@@ -380,7 +356,7 @@ for ep in range(args.num_train_epochs):
         
         update_count += 1
 
-        if update_count % args.gradient_accumulation_steps == args.gradient_accumulation_steps - 1:
+        if update_count % 1 == 1 - 1:
             # update for gradient accumulation
             optimizer.step()
             scheduler.step()
@@ -388,7 +364,7 @@ for ep in range(args.num_train_epochs):
             
             # speed measure
             end = time.time()
-            speed = args.batch_size * args.gradient_accumulation_steps / (end - start)
+            speed = 1 * 1 / (end - start)
             start = end
             
             # show progress
